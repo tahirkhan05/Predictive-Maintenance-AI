@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictive Maintenance AI - Project Report</title>
+    <meta name="description" content="Formal project report for Predictive Maintenance AI - IBM BOB Internship Assignment.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        .report-page-container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 20px auto;
+            background: #131e38;
+            border: 1px solid #273754;
+            border-radius: 14px;
+            padding: 32px 40px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #273754;
+            padding-bottom: 20px;
+            margin-bottom: 28px;
+        }
+        .report-title-block h1 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+        .report-meta-tag {
+            font-size: 0.88rem;
+            color: #94a3b8;
+        }
+        .report-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .nav-btn {
+            font-family: var(--font-sans);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            background: #1e293b;
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            color: #93c5fd;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .nav-btn:hover {
+            background: #2563eb;
+            color: #ffffff;
+        }
+        .print-btn {
+            background: #0f172a;
+            border-color: #64748b;
+            color: #cbd5e1;
+        }
+        .print-btn:hover {
+            background: #334155;
+            color: #ffffff;
+        }
+        .report-section {
+            margin-bottom: 32px;
+        }
+        .report-section h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #60a5fa;
+            border-bottom: 1px solid #273754;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .report-section p {
+            font-size: 0.92rem;
+            color: #cbd5e1;
+            line-height: 1.65;
+            margin-bottom: 12px;
+        }
+        .report-section ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 14px;
+        }
+        .report-section ul li {
+            font-size: 0.90rem;
+            color: #cbd5e1;
+            padding: 4px 0 4px 18px;
+            position: relative;
+            line-height: 1.5;
+        }
+        .report-section ul li::before {
+            content: "•";
+            position: absolute;
+            left: 4px;
+            color: #38bdf8;
+            font-weight: bold;
+        }
+        .table-wrapper {
+            background: #0d162d;
+            border: 1px solid #273754;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+        .report-table th, .report-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #273754;
+        }
+        .report-table th {
+            color: #94a3b8;
+            font-weight: 600;
+            background: #131e38;
+        }
+        .report-table td {
+            color: #e2e8f0;
+        }
+        .report-table .rf-val {
+            font-family: var(--font-mono);
+            color: #38bdf8;
+            font-weight: 600;
+        }
+        .figure-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .figure-card {
+            background: #0d162d;
+            border: 1px solid #273754;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .figure-card.full-width {
+            grid-column: span 2;
+        }
+        .figure-card img {
+            width: 100%;
+            border-radius: 6px;
+            background: #ffffff;
+            object-fit: contain;
+        }
+        .figure-caption {
+            font-size: 0.80rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+        .formula-box {
+            background: #0d162d;
+            border-left: 4px solid #3b82f6;
+            padding: 10px 16px;
+            border-radius: 0 6px 6px 0;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: #93c5fd;
+            margin: 10px 0 14px 0;
+        }
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            .report-page-container {
+                background: #ffffff !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+            .nav-btn, .report-actions {
+                display: none !important;
+            }
+            .report-section h2 {
+                color: #1e3a8a !important;
+                border-bottom: 2px solid #cbd5e1 !important;
+            }
+            .report-section p, .report-section ul li, .report-table td {
+                color: #1e293b !important;
+            }
+            .table-wrapper, .figure-card, .formula-box {
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-page-container">
+        <!-- Report Header -->
+        <header class="report-header">
+            <div class="report-title-block">
+                <h1>Predictive Maintenance AI</h1>
+                <p class="report-meta-tag">
+                    <strong>Project Report & Technical Documentation</strong> &bull; IBM BOB Internship Project &bull; UCI AI4I 2020
+                </p>
+            </div>
+            <div class="report-actions">
+                <a href="/" class="nav-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    Live Dashboard
+                </a>
+                <button onclick="window.print()" class="nav-btn print-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    Print / Export PDF
+                </button>
+            </div>
+        </header>
+
+        <!-- Section 1: Introduction -->
+        <section class="report-section">
+            <h2>1. Introduction</h2>
+            <p>
+                Predictive Maintenance (PdM) is a data-driven equipment management strategy that evaluates the condition of industrial machinery by analyzing operating parameters and sensor telemetry. Unlike reactive maintenance (repairing equipment only after failure) or scheduled preventative maintenance (servicing machines on arbitrary calendar intervals), predictive maintenance uses machine learning algorithms to anticipate mechanical breakdowns before they disrupt operations.
+            </p>
+        </section>
+
+        <!-- Section 2: Problem Statement -->
+        <section class="report-section">
+            <h2>2. Problem Statement</h2>
+            <p>
+                Modern manufacturing facilities rely heavily on high-speed rotational milling machines. Unplanned machine seizures, tool fractures, and thermal dissipation failures cause sudden factory line standstills, scrapped workpieces, high repair costs, and safety hazards.
+            </p>
+            <p>
+                The primary objective of this project is to build an intelligent binary classification system that predicts whether an industrial machine is likely to fail (<code>1 = Machine Failure</code>, <code>0 = Normal Operation</code>) based on its operating sensor parameters, while prioritizing <strong>high recall for critical failure detection</strong> and maintaining a low false-alarm rate.
+            </p>
+        </section>
+
+        <!-- Section 3: Why This Project Was Made -->
+        <section class="report-section">
+            <h2>3. Why This Project Was Made</h2>
+            <ul>
+                <li><strong>Reducing Unplanned Downtime:</strong> Advance failure warnings allow maintenance crews to service equipment during scheduled changeovers rather than during active production runs.</li>
+                <li><strong>Minimizing Repair & Maintenance Costs:</strong> Catching tool wear and torque overstrain early prevents catastrophic secondary damage to expensive spindles, drives, and gearboxes.</li>
+                <li><strong>Preventing Scrap & Material Losses:</strong> Machine failures mid-cut ruin expensive raw stock and workpieces.</li>
+                <li><strong>Enhancing Workplace Safety:</strong> Early detection eliminates catastrophic tool fractures that can eject high-speed metal fragments.</li>
+            </ul>
+        </section>
+
+        <!-- Section 4: Dataset -->
+        <section class="report-section">
+            <h2>4. Dataset</h2>
+            <p>
+                This project uses the official <strong>AI4I 2020 Predictive Maintenance Dataset</strong> from the UCI Machine Learning Repository.
+            </p>
+            <ul>
+                <li><strong>Source Link:</strong> <a href="https://archive.ics.uci.edu/dataset/601/ai4i" target="_blank" style="color: #60a5fa;">UCI Machine Learning Repository — AI4I 2020</a></li>
+                <li><strong>Nature:</strong> Synthetic dataset reflecting realistic milling machine telemetry.</li>
+                <li><strong>Observations:</strong> 10,000 records.</li>
+                <li><strong>Missing Values:</strong> 0 (fully verified clean dataset).</li>
+                <li><strong>Target Variable:</strong> <code>Machine failure</code> (Binary: <code>0</code> = Normal [96.61%], <code>1</code> = Failure [3.39%]).</li>
+                <li><strong>Class Distribution:</strong> 9,661 Normal cases vs. 339 Failure cases (severe class imbalance).</li>
+            </ul>
+        </section>
+
+        <!-- Section 5: Methodology & Feature Engineering -->
+        <section class="report-section">
+            <h2>5. Methodology & Domain Feature Engineering</h2>
+            <p>
+                To provide the classification algorithms with meaningful physical signals, four domain features were engineered from sensor telemetry based on the physical causes of machine failure:
+            </p>
+
+            <div class="formula-box">
+                1. Temp_Difference = Process Temperature [K] - Air Temperature [K]
+            </div>
+            <p>
+                <em>Rationale:</em> Heat Dissipation Failure (HDF) is directly caused when heat from machining cannot adequately transfer into the surrounding environment at lower rotational speeds.
+            </p>
+
+            <div class="formula-box">
+                2. Power_kW = (Torque [Nm] × Rotational Speed [rpm] × 2π / 60) / 1000
+            </div>
+            <p>
+                <em>Rationale:</em> Power Failure (PWF) occurs when the mechanical power output falls outside safe operational bounds (&lt; 3.5 kW or &gt; 9.0 kW).
+            </p>
+
+            <div class="formula-box">
+                3. Overstrain_Index = Tool Wear [min] × Torque [Nm]
+            </div>
+            <p>
+                <em>Rationale:</em> Overstrain Failure (OSF) occurs when high cutting torque is exerted on an already worn cutting blade.
+            </p>
+
+            <div class="formula-box">
+                4. Torque_Speed_Ratio = Torque [Nm] / Rotational Speed [rpm]
+            </div>
+            <p>
+                <em>Rationale:</em> Detects low-speed high-drag mechanical stalls.
+            </p>
+        </section>
+
+        <!-- Section 6: Results & Model Comparison -->
+        <section class="report-section">
+            <h2>6. Results & Model Comparison</h2>
+            <p>
+                Models were evaluated using <strong>5-Fold Stratified Cross-Validation</strong> on the training set and tested on an independent hold-out test set (<strong>2,000 samples</strong>: 1,932 Normal, 68 Failures).
+            </p>
+
+            <div class="table-wrapper">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Performance Metric</th>
+                            <th>Logistic Regression (Balanced)</th>
+                            <th style="color: #60a5fa;">Random Forest Classifier (Selected)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Accuracy</strong></td>
+                            <td>86.10%</td>
+                            <td class="rf-val">98.05%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Recall / Sensitivity (TPR)</strong></td>
+                            <td>88.24% (60/68 caught)</td>
+                            <td class="rf-val" style="color: #34d399;">89.71% (61/68 caught)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Precision (PPV)</strong></td>
+                            <td>18.18%</td>
+                            <td class="rf-val">65.59%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Specificity (TNR)</strong></td>
+                            <td>86.02%</td>
+                            <td class="rf-val">98.34%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>F1-Score</strong></td>
+                            <td>0.3015</td>
+                            <td class="rf-val" style="color: #34d399;">0.7578 (5-Fold CV: 0.7659)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ROC-AUC Score</strong></td>
+                            <td>0.9385</td>
+                            <td class="rf-val">0.9869 (5-Fold CV: 0.9815)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PR-AUC (Average Precision)</strong></td>
+                            <td>0.4183</td>
+                            <td class="rf-val">0.8574</td>
+                        </tr>
+                        <tr>
+                            <td><strong>False Positive Rate (FPR)</strong></td>
+                            <td>13.98% (270 false alarms)</td>
+                            <td class="rf-val">1.66% (Only 32 false alarms)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>False Negative Rate (FNR)</strong></td>
+                            <td>11.76% (8 missed)</td>
+                            <td class="rf-val">10.29% (7 missed)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>
+                <strong>Model Selection Rationale:</strong> The Random Forest Classifier was chosen as the champion model. It detects <strong>89.71% of all critical failures</strong> while reducing false alarms from 270 down to 32. The close agreement between 5-fold cross-validation F1 (0.7659) and test F1 (0.7578) demonstrates <strong>no overfitting or underfitting</strong>.
+            </p>
+        </section>
+
+        <!-- Section 7: Diagnostic Visualizations -->
+        <section class="report-section">
+            <h2>7. Diagnostic Visualizations & Curves</h2>
+            <div class="figure-grid">
+                <div class="figure-card">
+                    <img src="/reports/figures/roc_curves_comparison.png" alt="ROC Curves Comparison">
+                    <span class="figure-caption">Figure 1: Receiver Operating Characteristic (ROC) Curves (RF AUC = 0.9869)</span>
+                </div>
+                <div class="figure-card">
+                    <img src="/reports/figures/precision_recall_curves.png" alt="Precision Recall Curves">
+                    <span class="figure-caption">Figure 2: Precision-Recall Curves on Imbalanced Failure Class</span>
+                </div>
+                <div class="figure-card">
+                    <img src="/reports/figures/confusion_matrices_side_by_side.png" alt="Confusion Matrices">
+                    <span class="figure-caption">Figure 3: Confusion Matrices Comparison on Test Set (N = 2,000)</span>
+                </div>
+                <div class="figure-card">
+                    <img src="/reports/figures/feature_importance_bar_chart.png" alt="Feature Importance">
+                    <span class="figure-caption">Figure 4: Random Forest Feature Importance Ranking</span>
+                </div>
+                <div class="figure-card full-width">
+                    <img src="/reports/figures/sensor_distributions_and_failure_modes.png" alt="Sensor Distributions">
+                    <span class="figure-caption">Figure 5: Telemetry Boxplots & AI4I 2020 Failure Mode Occurrence Breakdown</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 8: Web Application Architecture -->
+        <section class="report-section">
+            <h2>8. Web Application Architecture</h2>
+            <p>
+                The application features a single-screen responsive dashboard built with Flask and vanilla HTML5/CSS/JavaScript:
+            </p>
+            <ul>
+                <li><strong>Interactive Telemetry Input:</strong> Real-time input controls with physical parameter validation.</li>
+                <li><strong>Instant Scenario Presets:</strong> 1-click loading for Normal Run, Overstrain Risk, Thermal Dissipation Risk, and Power Overload.</li>
+                <li><strong>Continuous Risk Gauges:</strong> Visual meters for Overstrain Load, Tool Life Expended, Power Envelope Stress, and Thermal Stress.</li>
+                <li><strong>Model Performance & Explainability:</strong> Live side-by-side metrics and human-readable diagnostic risk factors.</li>
+            </ul>
+        </section>
+
+        <!-- Section 9: Conclusion & Future Scope -->
+        <section class="report-section">
+            <h2>9. Conclusion & Future Improvements</h2>
+            <p>
+                The Predictive Maintenance AI project successfully demonstrates a technically sound, explainable machine learning system capable of predicting industrial machine failure before catastrophic breakdown occurs.
+            </p>
+            <p><strong>Future Improvements:</strong></p>
+            <ul>
+                <li>Direct integration with IoT telemetry pipelines via MQTT or OPC-UA.</li>
+                <li>Remaining Useful Life (RUL) regression modeling.</li>
+                <li>Multi-class failure mode classification (TWF, HDF, PWF, OSF).</li>
+                <li>Automated retraining loops triggered by factory maintenance logs.</li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>

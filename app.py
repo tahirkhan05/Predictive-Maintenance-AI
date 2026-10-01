@@ -82,6 +82,17 @@ def index():
     )
 
 
+@app.route('/report')
+def report():
+    """Render the formal HTML project report."""
+    _, metrics, feature_importances = get_model()
+    return render_template(
+        'report.html',
+        metrics=metrics,
+        feature_importances=feature_importances
+    )
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     """API endpoint to predict machine failure from JSON or form input."""

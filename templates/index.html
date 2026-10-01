@@ -22,12 +22,22 @@
                 </div>
                 <div>
                     <h1 class="app-title">Predictive Maintenance AI</h1>
-                    <p class="app-subtitle">Machine Failure Prediction Using Machine Learning</p>
+                    <p class="app-subtitle">Machine Failure Prediction & Diagnostics Using Machine Learning</p>
                 </div>
             </div>
-            <div class="header-badge">
-                <span class="pulse-dot"></span>
-                <span>System Active &bull; AI4I 2020 Model</span>
+            <div class="header-actions">
+                <button type="button" class="graph-modal-btn" id="openGraphModalBtn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    View Diagnostic Curves (ROC / PR)
+                </button>
+                <div class="header-badge">
+                    <span class="pulse-dot"></span>
+                    <span>AI4I 2020 Model &bull; Active</span>
+                </div>
             </div>
         </header>
 
@@ -44,12 +54,12 @@
                         </svg>
                         Machine Operating Telemetry
                     </h2>
-                    <span class="card-subtitle">Enter sensor parameters or select a test preset</span>
+                    <span class="card-subtitle">Input sensor readings or click quick-load test scenarios</span>
                 </div>
 
                 <!-- Quick Presets -->
                 <div class="preset-bar">
-                    <span class="preset-label">Test Presets:</span>
+                    <span class="preset-label">Test Scenarios:</span>
                     <div class="preset-buttons">
                         <button type="button" class="preset-btn active" data-preset="normal" id="presetNormalBtn">Normal Run</button>
                         <button type="button" class="preset-btn danger-preset" data-preset="overstrain" id="presetOverstrainBtn">Overstrain Risk</button>
@@ -61,43 +71,37 @@
                 <!-- Telemetry Form -->
                 <form id="predictionForm" class="telemetry-form" autocomplete="off">
                     <div class="form-grid">
-                        <!-- Product Type -->
                         <div class="form-group">
                             <label for="type">Product Quality Type</label>
                             <select id="type" name="type" required>
-                                <option value="L" selected>L (Low Quality - 50% of production)</option>
-                                <option value="M">M (Medium Quality - 30% of production)</option>
-                                <option value="H">H (High Quality - 20% of production)</option>
+                                <option value="L" selected>L (Low Variant - 50%)</option>
+                                <option value="M">M (Medium Variant - 30%)</option>
+                                <option value="H">H (High Variant - 20%)</option>
                             </select>
                         </div>
 
-                        <!-- Tool Wear -->
                         <div class="form-group">
-                            <label for="tool_wear">Tool Wear (min) <span class="range-hint">[0 - 250 min]</span></label>
+                            <label for="tool_wear">Tool Wear (min) <span class="range-hint">[0 - 250]</span></label>
                             <input type="number" id="tool_wear" name="tool_wear" step="1" min="0" max="300" value="45" required>
                         </div>
 
-                        <!-- Air Temperature -->
                         <div class="form-group">
-                            <label for="air_temperature">Air Temperature (K) <span class="range-hint">[290 - 310 K]</span></label>
+                            <label for="air_temperature">Air Temp (K) <span class="range-hint">[290 - 310]</span></label>
                             <input type="number" id="air_temperature" name="air_temperature" step="0.1" min="285" max="315" value="298.1" required>
                         </div>
 
-                        <!-- Process Temperature -->
                         <div class="form-group">
-                            <label for="process_temperature">Process Temperature (K) <span class="range-hint">[300 - 315 K]</span></label>
+                            <label for="process_temperature">Process Temp (K) <span class="range-hint">[300 - 315]</span></label>
                             <input type="number" id="process_temperature" name="process_temperature" step="0.1" min="290" max="325" value="308.6" required>
                         </div>
 
-                        <!-- Rotational Speed -->
                         <div class="form-group">
-                            <label for="rotational_speed">Rotational Speed (rpm) <span class="range-hint">[1150 - 2900 rpm]</span></label>
+                            <label for="rotational_speed">Rotational Speed (rpm) <span class="range-hint">[1150 - 2900]</span></label>
                             <input type="number" id="rotational_speed" name="rotational_speed" step="1" min="800" max="3200" value="1551" required>
                         </div>
 
-                        <!-- Torque -->
                         <div class="form-group">
-                            <label for="torque">Torque (Nm) <span class="range-hint">[3.0 - 80.0 Nm]</span></label>
+                            <label for="torque">Torque (Nm) <span class="range-hint">[3.0 - 80.0]</span></label>
                             <input type="number" id="torque" name="torque" step="0.1" min="0" max="120" value="42.8" required>
                         </div>
                     </div>
@@ -111,9 +115,38 @@
                     </button>
                     <div id="formError" class="form-error-msg"></div>
                 </form>
+
+                <!-- Subsystem Telemetry Stress Gauges -->
+                <div class="gauges-panel">
+                    <div class="section-title-sm">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M16 12l-4-4-4 4M12 16V8"></path>
+                        </svg>
+                        Subsystem Stress & Operating Envelopes
+                    </div>
+                    <div class="gauges-grid">
+                        <div class="gauge-card">
+                            <div class="gauge-label"><span>Overstrain Load</span><span id="gOverstrainVal" class="gauge-pct">16.3%</span></div>
+                            <div class="gauge-track"><div class="gauge-fill" id="gOverstrainBar" style="width: 16.3%;"></div></div>
+                        </div>
+                        <div class="gauge-card">
+                            <div class="gauge-label"><span>Tool Life Expended</span><span id="gWearVal" class="gauge-pct">18.8%</span></div>
+                            <div class="gauge-track"><div class="gauge-fill" id="gWearBar" style="width: 18.8%;"></div></div>
+                        </div>
+                        <div class="gauge-card">
+                            <div class="gauge-label"><span>Power Envelope</span><span id="gPowerVal" class="gauge-pct">10.5%</span></div>
+                            <div class="gauge-track"><div class="gauge-fill" id="gPowerBar" style="width: 10.5%;"></div></div>
+                        </div>
+                        <div class="gauge-card">
+                            <div class="gauge-label"><span>Thermal Stress</span><span id="gThermalVal" class="gauge-pct">25.0%</span></div>
+                            <div class="gauge-track"><div class="gauge-fill" id="gThermalBar" style="width: 25.0%;"></div></div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <!-- Right Column: Prediction Results & Insights -->
+            <!-- Right Column: Prediction Results, Metrics & Comparison -->
             <section class="card output-card" aria-label="Machine Failure Prediction Results">
                 <!-- Real-time Prediction Status Banner -->
                 <div class="result-banner status-normal" id="resultBanner">
@@ -131,9 +164,9 @@
 
                     <div class="probability-box">
                         <span class="prob-label">Failure Probability</span>
-                        <span class="prob-value" id="probabilityValue">0.4%</span>
+                        <span class="prob-value" id="probabilityValue">1.6%</span>
                         <div class="prob-bar-container">
-                            <div class="prob-bar-fill" id="probabilityBar" style="width: 0.4%;"></div>
+                            <div class="prob-bar-fill" id="probabilityBar" style="width: 1.6%;"></div>
                         </div>
                     </div>
                 </div>
@@ -153,62 +186,106 @@
                     </ul>
                 </div>
 
-                <!-- Bottom Metrics & Feature Importance Split Grid -->
+                <!-- Diagnostics & Metrics Multi-Grid -->
                 <div class="diagnostics-split">
-                    <!-- Model Performance Metrics -->
+                    <!-- Model Performance Comparison Matrix -->
                     <div class="diag-col">
                         <div class="section-title-sm">
                             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
                                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
                             </svg>
-                            Model Performance ({{ model_name }})
+                            Model Comparison Matrix
                         </div>
-                        <div class="metrics-grid">
-                            <div class="metric-chip">
-                                <span class="m-name">Accuracy</span>
-                                <span class="m-val" id="mAccuracy">{{ "%.2f"|format(metrics.accuracy * 100) }}%</span>
-                            </div>
-                            <div class="metric-chip highlight-chip">
-                                <span class="m-name">Recall (Failure)</span>
-                                <span class="m-val" id="mRecall">{{ "%.2f"|format(metrics.recall * 100) }}%</span>
-                            </div>
-                            <div class="metric-chip">
-                                <span class="m-name">Precision</span>
-                                <span class="m-val" id="mPrecision">{{ "%.2f"|format(metrics.precision * 100) }}%</span>
-                            </div>
-                            <div class="metric-chip highlight-chip">
-                                <span class="m-name">F1-Score</span>
-                                <span class="m-val" id="mF1">{{ "%.4f"|format(metrics.f1_score) }}</span>
-                            </div>
-                            <div class="metric-chip full-width-metric">
-                                <span class="m-name">ROC-AUC Score</span>
-                                <span class="m-val" id="mRoc">{{ "%.4f"|format(metrics.roc_auc) }}</span>
-                            </div>
+                        <div class="comp-table-container">
+                            <table class="comp-table">
+                                <thead>
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>Logistic Reg.</th>
+                                        <th class="highlight-header">Random Forest</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Accuracy</td>
+                                        <td>86.10%</td>
+                                        <td class="rf-col"><strong>98.05%</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Recall (Failure)</td>
+                                        <td>88.24%</td>
+                                        <td class="rf-col highlight-cell"><strong>89.71%</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Precision</td>
+                                        <td>18.18%</td>
+                                        <td class="rf-col"><strong>65.59%</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>F1-Score</td>
+                                        <td>0.3015</td>
+                                        <td class="rf-col highlight-cell"><strong>0.7578</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ROC-AUC</td>
+                                        <td>0.9385</td>
+                                        <td class="rf-col"><strong>0.9869</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>PR-AUC (Avg Prec)</td>
+                                        <td>0.4183</td>
+                                        <td class="rf-col"><strong>0.8574</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <!-- Feature Importance Section -->
+                    <!-- Confusion Matrix Mini-Card & Feature Importance -->
                     <div class="diag-col">
                         <div class="section-title-sm">
                             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
-                                <line x1="18" y1="20" x2="18" y2="10"></line>
-                                <line x1="12" y1="20" x2="12" y2="4"></line>
-                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="12" y1="3" x2="12" y2="21"></line>
                             </svg>
-                            Top Predictive Features
+                            Confusion Matrix (Test Set: N=2,000)
                         </div>
-                        <div class="feature-bars">
-                            {% for feat in feature_importances %}
-                            <div class="feature-bar-row">
-                                <div class="feat-info">
-                                    <span class="feat-name">{{ feat.feature }}</span>
-                                    <span class="feat-pct">{{ "%.1f"|format(feat.importance * 100) }}%</span>
-                                </div>
-                                <div class="feat-track">
-                                    <div class="feat-fill" style="width: {{ feat.importance * 100 * 3.5 }}%;"></div>
-                                </div>
+                        <div class="cm-grid">
+                            <div class="cm-cell cm-tn">
+                                <span class="cm-val">1,900</span>
+                                <span class="cm-lbl">True Negative</span>
                             </div>
-                            {% endfor %}
+                            <div class="cm-cell cm-fp">
+                                <span class="cm-val">32</span>
+                                <span class="cm-lbl">False Alarm (FP)</span>
+                            </div>
+                            <div class="cm-cell cm-fn">
+                                <span class="cm-val">7</span>
+                                <span class="cm-lbl">Missed (FN)</span>
+                            </div>
+                            <div class="cm-cell cm-tp">
+                                <span class="cm-val">61</span>
+                                <span class="cm-lbl">True Failure (TP)</span>
+                            </div>
+                        </div>
+
+                        <!-- Top Feature Bars -->
+                        <div class="feature-bars-container">
+                            <span class="feat-section-lbl">Top Contributing Predictive Features:</span>
+                            <div class="feature-bars">
+                                {% for feat in feature_importances %}
+                                <div class="feature-bar-row">
+                                    <div class="feat-info">
+                                        <span class="feat-name">{{ feat.feature }}</span>
+                                        <span class="feat-pct">{{ "%.1f"|format(feat.importance * 100) }}%</span>
+                                    </div>
+                                    <div class="feat-track">
+                                        <div class="feat-fill" style="width: {{ feat.importance * 100 * 3.8 }}%;"></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -223,12 +300,31 @@
             <div class="footer-meta">
                 <span>IBM BOB Internship Project</span> &bull; 
                 <span>AI4I 2020 Dataset (UCI)</span> &bull; 
-                <span>Trained Random Forest Classifier</span>
+                <span>Random Forest (Recall: 89.71%, ROC-AUC: 0.9869)</span>
             </div>
         </footer>
     </div>
 
-    <!-- Presets embedded for instant frontend switching -->
+    <!-- Modal for Diagnostic Graphs (ROC, PR Curves, Distributions) -->
+    <div class="modal-overlay" id="graphModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Diagnostic Visualizations & Curves</h3>
+                <button type="button" class="close-modal-btn" id="closeGraphModalBtn">&times;</button>
+            </div>
+            <div class="modal-tabs">
+                <button class="modal-tab-btn active" data-img="/reports/figures/roc_curves_comparison.png">ROC Curves</button>
+                <button class="modal-tab-btn" data-img="/reports/figures/precision_recall_curves.png">Precision-Recall</button>
+                <button class="modal-tab-btn" data-img="/reports/figures/confusion_matrices_side_by_side.png">Confusion Matrices</button>
+                <button class="modal-tab-btn" data-img="/reports/figures/feature_importance_bar_chart.png">Feature Importance</button>
+                <button class="modal-tab-btn" data-img="/reports/figures/sensor_distributions_and_failure_modes.png">Sensor Distributions</button>
+            </div>
+            <div class="modal-body">
+                <img id="modalGraphImg" src="/reports/figures/roc_curves_comparison.png" alt="Diagnostic Graph">
+            </div>
+        </div>
+    </div>
+
     <script>
         const PRESET_DATA = {{ presets | tojson }};
     </script>

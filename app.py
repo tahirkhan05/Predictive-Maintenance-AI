@@ -2,13 +2,13 @@
 Flask Web Application for Predictive Maintenance AI.
 
 Serves a single-screen dashboard interface for real-time machine failure prediction,
-model metrics display, and explainability visualization.
+comprehensive metrics comparison, subsystem stress gauges, and diagnostic visualization.
 """
 
 import os
 import sys
 import json
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 
 # Add project root directory to path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -67,7 +67,7 @@ def index():
     """Render the single-page web interface."""
     _, metrics, feature_importances = get_model()
     best_model_name = metrics['best_model']
-    model_stats = metrics['models_comparison'][best_model_name]['test_metrics']
+    models_comp = metrics['models_comparison']
     
     # Run initial default prediction for instant page completeness
     default_pred = predict_failure(PRESETS['normal'])
@@ -75,8 +75,8 @@ def index():
     return render_template(
         'index.html',
         model_name=best_model_name,
-        metrics=model_stats,
-        feature_importances=feature_importances[:6],
+        models_comparison=models_comp,
+        feature_importances=feature_importances[:7],
         initial_prediction=default_pred,
         presets=PRESETS
     )
@@ -112,8 +112,14 @@ def model_info():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/reports/figures/<path:filename>')
+def serve_figure(filename):
+    """Serve generated diagnostic figures."""
+    figures_dir = os.path.join(os.path.dirname(__file__), 'reports', 'figures')
+    return send_from_directory(figures_dir, filename)
+
+
 if __name__ == '__main__':
-    # Initialize model on startup
     get_model()
     print("\n* Predictive Maintenance AI Web App starting...")
     print("* Access the application in your browser at: http://127.0.0.1:5000\n")

@@ -1,6 +1,6 @@
 /**
  * Predictive Maintenance AI - Client-side Interaction Controller
- * Handles interactive telemetry form submission, scenario presets, and real-time UI updates.
+ * Handles interactive telemetry form submission, scenario presets, stress gauges, and diagnostic modal.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -17,8 +17,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const probabilityBar = document.getElementById('probabilityBar');
     const factorsList = document.getElementById('factorsList');
 
+    // Subsystem Gauges
+    const gOverstrainVal = document.getElementById('gOverstrainVal');
+    const gOverstrainBar = document.getElementById('gOverstrainBar');
+    const gWearVal = document.getElementById('gWearVal');
+    const gWearBar = document.getElementById('gWearBar');
+    const gPowerVal = document.getElementById('gPowerVal');
+    const gPowerBar = document.getElementById('gPowerBar');
+    const gThermalVal = document.getElementById('gThermalVal');
+    const gThermalBar = document.getElementById('gThermalBar');
+
     // Preset buttons
     const presetButtons = document.querySelectorAll('.preset-btn');
+
+    // Modal elements
+    const graphModal = document.getElementById('graphModal');
+    const openGraphModalBtn = document.getElementById('openGraphModalBtn');
+    const closeGraphModalBtn = document.getElementById('closeGraphModalBtn');
+    const modalTabBtns = document.querySelectorAll('.modal-tab-btn');
+    const modalGraphImg = document.getElementById('modalGraphImg');
+
+    if (openGraphModalBtn && graphModal) {
+        openGraphModalBtn.addEventListener('click', () => {
+            graphModal.style.display = 'flex';
+        });
+    }
+
+    if (closeGraphModalBtn && graphModal) {
+        closeGraphModalBtn.addEventListener('click', () => {
+            graphModal.style.display = 'none';
+        });
+    }
+
+    if (graphModal) {
+        graphModal.addEventListener('click', (e) => {
+            if (e.target === graphModal) {
+                graphModal.style.display = 'none';
+            }
+        });
+    }
+
+    modalTabBtns.forEach(tab => {
+        tab.addEventListener('click', () => {
+            modalTabBtns.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const imgSrc = tab.getAttribute('data-img');
+            modalGraphImg.src = imgSrc;
+        });
+    });
 
     // Preset selection handler
     presetButtons.forEach(btn => {
@@ -27,11 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof PRESET_DATA !== 'undefined' && PRESET_DATA[presetKey]) {
                 const data = PRESET_DATA[presetKey];
                 
-                // Update active state
                 presetButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
-                // Populate form fields
                 document.getElementById('type').value = data.type;
                 document.getElementById('air_temperature').value = data.air_temperature;
                 document.getElementById('process_temperature').value = data.process_temperature;
@@ -39,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('torque').value = data.torque;
                 document.getElementById('tool_wear').value = data.tool_wear;
 
-                // Auto-trigger prediction for seamless demo experience
                 submitPrediction();
             }
         });
@@ -48,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Form submission
     predictionForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        // Remove active class from preset buttons if custom input is submitted
         presetButtons.forEach(b => b.classList.remove('active'));
         submitPrediction();
     });
@@ -136,6 +178,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? 'Operating parameters indicate elevated probability of mechanical failure.' 
                 : 'All operating parameters are safely within standard machine tolerances.';
             factorsList.appendChild(li);
+        }
+
+        // 4. Update Subsystem Stress Gauges
+        if (data.subsystem_gauges) {
+            const g = data.subsystem_gauges;
+            
+            gOverstrainVal.textContent = `${g.overstrain_stress}%`;
+            gOverstrainBar.style.width = `${Math.min(100, Math.max(2, g.overstrain_stress))}%`;
+            gOverstrainBar.style.background = g.overstrain_stress > 70 ? '#ef4444' : (g.overstrain_stress > 40 ? '#f59e0b' : '#10b981');
+
+            gWearVal.textContent = `${g.tool_wear_expended}%`;
+            gWearBar.style.width = `${Math.min(100, Math.max(2, g.tool_wear_expended))}%`;
+            gWearBar.style.background = g.tool_wear_expended > 75 ? '#ef4444' : (g.tool_wear_expended > 50 ? '#f59e0b' : '#10b981');
+
+            gPowerVal.textContent = `${g.power_stress}%`;
+            gPowerBar.style.width = `${Math.min(100, Math.max(2, g.power_stress))}%`;
+            gPowerBar.style.background = g.power_stress > 70 ? '#ef4444' : (g.power_stress > 40 ? '#f59e0b' : '#10b981');
+
+            gThermalVal.textContent = `${g.thermal_stress}%`;
+            gThermalBar.style.width = `${Math.min(100, Math.max(2, g.thermal_stress))}%`;
+            gThermalBar.style.background = g.thermal_stress > 70 ? '#ef4444' : (g.thermal_stress > 40 ? '#f59e0b' : '#10b981');
         }
     }
 });

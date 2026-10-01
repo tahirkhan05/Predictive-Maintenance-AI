@@ -2,8 +2,8 @@
 Model Training & Evaluation Pipeline for Predictive Maintenance AI.
 
 Trains and compares Logistic Regression and Random Forest models,
-handles class imbalance using class weights and stratified sampling,
-evaluates via 5-fold Stratified CV and Test set, and exports the best pipeline.
+computes an extensive suite of classification metrics, handles class imbalance,
+evaluates via 5-fold Stratified CV and hold-out test set, and exports the best pipeline.
 """
 
 import os
@@ -24,7 +24,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score,
-    f1_score, roc_auc_score, confusion_matrix, classification_report
+    f1_score, roc_auc_score, average_precision_score,
+    confusion_matrix, balanced_accuracy_score
 )
 
 from src.data_preprocessing import load_data, validate_data, split_data
@@ -68,6 +69,44 @@ def get_feature_names(preprocessor: ColumnTransformer) -> list:
     return feature_names
 
 
+def compute_extended_metrics(y_true, y_pred, y_proba):
+    """
+    Computes an extensive set of classification metrics for imbalanced datasets.
+    """
+    cm = confusion_matrix(y_true, y_pred)
+    tn, fp, fn, tp = cm.ravel()
+    
+    accuracy = accuracy_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred, zero_division=0)
+    recall = recall_score(y_true, y_pred, zero_division=0)  # Sensitivity / TPR
+    specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0  # TNR
+    f1 = f1_score(y_true, y_pred, zero_division=0)
+    balanced_acc = balanced_accuracy_score(y_true, y_pred)
+    roc_auc = roc_auc_score(y_true, y_proba)
+    pr_auc = average_precision_score(y_true, y_proba)
+    fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
+    fnr = fn / (fn + tp) if (fn + tp) > 0 else 0.0
+
+    return {
+        'accuracy': round(float(accuracy), 4),
+        'precision': round(float(precision), 4),
+        'recall': round(float(recall), 4),
+        'specificity': round(float(specificity), 4),
+        'f1_score': round(float(f1), 4),
+        'balanced_accuracy': round(float(balanced_acc), 4),
+        'roc_auc': round(float(roc_auc), 4),
+        'pr_auc': round(float(pr_auc), 4),
+        'false_positive_rate': round(float(fpr), 4),
+        'false_negative_rate': round(float(fnr), 4),
+        'confusion_breakdown': {
+            'true_negatives': int(tn),
+            'false_positives': int(fp),
+            'false_negatives': int(fn),
+            'true_positives': int(tp)
+        }
+    }
+
+
 def train_and_evaluate():
     """
     Executes the end-to-end model training, comparison, and serialization pipeline.
@@ -98,8 +137,6 @@ def train_and_evaluate():
     print(f"  [+] Test features shape:  {X_test.shape}")
     
     # 4. Define candidate models with Scikit-Learn Pipelines
-    preprocessor = build_preprocessor()
-    
     candidate_pipelines = {
         'Logistic Regression': Pipeline([
             ('preprocessor', build_preprocessor()),
@@ -137,22 +174,10 @@ def train_and_evaluate():
         y_pred = pipeline.predict(X_test)
         y_proba = pipeline.predict_proba(X_test)[:, 1]
         
-        # Calculate test metrics
-        acc = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred)
-        rec = recall_score(y_test, y_pred)
-        f1 = f1_score(y_test, y_pred)
-        roc = roc_auc_score(y_test, y_proba)
-        cm = confusion_matrix(y_test, y_pred).tolist()
+        test_ext = compute_extended_metrics(y_test, y_pred, y_proba)
         
         results[name] = {
-            'test_metrics': {
-                'accuracy': round(float(acc), 4),
-                'precision': round(float(prec), 4),
-                'recall': round(float(rec), 4),
-                'f1_score': round(float(f1), 4),
-                'roc_auc': round(float(roc), 4),
-            },
+            'test_metrics': test_ext,
             'cv_train_metrics': {
                 'accuracy_mean': round(float(np.mean(cv_scores['test_accuracy'])), 4),
                 'precision_mean': round(float(np.mean(cv_scores['test_precision'])), 4),
@@ -160,15 +185,17 @@ def train_and_evaluate():
                 'f1_mean': round(float(np.mean(cv_scores['test_f1'])), 4),
                 'roc_auc_mean': round(float(np.mean(cv_scores['test_roc_auc'])), 4),
             },
-            'confusion_matrix': cm
+            'confusion_matrix': confusion_matrix(y_test, y_pred).tolist()
         }
         
-        print(f"  Test Accuracy:  {acc * 100:.2f}%")
-        print(f"  Test Precision: {prec * 100:.2f}%")
-        print(f"  Test Recall:    {rec * 100:.2f}% (Critical for failure detection)")
-        print(f"  Test F1 Score:  {f1:.4f} (5-Fold CV F1: {results[name]['cv_train_metrics']['f1_mean']:.4f})")
-        print(f"  Test ROC-AUC:   {roc:.4f} (5-Fold CV ROC-AUC: {results[name]['cv_train_metrics']['roc_auc_mean']:.4f})")
-        print(f"  Confusion Matrix (TN, FP, FN, TP):\n  {cm}")
+        print(f"  Test Accuracy:     {test_ext['accuracy'] * 100:.2f}%")
+        print(f"  Test Precision:    {test_ext['precision'] * 100:.2f}%")
+        print(f"  Test Recall (TPR): {test_ext['recall'] * 100:.2f}% (Critical failure detection)")
+        print(f"  Test Specificity:  {test_ext['specificity'] * 100:.2f}%")
+        print(f"  Test F1 Score:     {test_ext['f1_score']:.4f} (5-Fold CV: {results[name]['cv_train_metrics']['f1_mean']:.4f})")
+        print(f"  Test ROC-AUC:      {test_ext['roc_auc']:.4f} (5-Fold CV: {results[name]['cv_train_metrics']['roc_auc_mean']:.4f})")
+        print(f"  Test PR-AUC:       {test_ext['pr_auc']:.4f}")
+        print(f"  Confusion Matrix (TN={test_ext['confusion_breakdown']['true_negatives']}, FP={test_ext['confusion_breakdown']['false_positives']}, FN={test_ext['confusion_breakdown']['false_negatives']}, TP={test_ext['confusion_breakdown']['true_positives']})")
     
     # 5. Best Model Selection & Feature Importance
     print("\n[5/5] Selecting Best Model & Exporting Artifacts...")
@@ -187,9 +214,9 @@ def train_and_evaluate():
     ]
     
     print(f"\nSelected Best Model: {best_model_name}")
-    print(f"Top 5 Most Important Features:")
-    for item in feat_imp_list[:5]:
-        print(f"  * {item['feature']}: {item['importance'] * 100:.2f}%")
+    print(f"Top Features Importance Ranking:")
+    for item in feat_imp_list:
+        print(f"  * {item['feature']:<26}: {item['importance'] * 100:.2f}%")
         
     # Save Pipeline
     model_path = os.path.join(MODELS_DIR, 'best_model.pkl')

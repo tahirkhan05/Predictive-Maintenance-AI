@@ -2,7 +2,7 @@
 Inference & Prediction Service for Predictive Maintenance AI.
 
 Loads the trained pipeline, validates input parameters, computes engineered features,
-and generates predictions with failure probabilities and explainability summaries.
+and generates predictions with failure probabilities, subsystem risk gauges, and explainability summaries.
 """
 
 import os
@@ -60,12 +60,10 @@ def validate_input(params: dict) -> dict:
     Raises:
         ValueError: If any input is invalid or missing.
     """
-    # 1. Product Type
     product_type = str(params.get('type', 'L')).strip().upper()
     if product_type not in ['L', 'M', 'H']:
         raise ValueError(f"Invalid Product Type '{product_type}'. Allowed values: 'L', 'M', 'H'.")
         
-    # Helper to convert to float safely
     def parse_float(field_name, min_val, max_val):
         val = params.get(field_name)
         if val is None or str(val).strip() == '':
@@ -97,6 +95,56 @@ def validate_input(params: dict) -> dict:
         'Rotational speed [rpm]': rot_speed,
         'Torque [Nm]': torque,
         'Tool wear [min]': tool_wear
+    }
+
+
+def compute_subsystem_gauges(data_dict: dict) -> dict:
+    """
+    Calculates percentage stress gauges across distinct mechanical subsystems.
+    """
+    air_temp = data_dict['Air temperature [K]']
+    proc_temp = data_dict['Process temperature [K]']
+    speed = data_dict['Rotational speed [rpm]']
+    torque = data_dict['Torque [Nm]']
+    wear = data_dict['Tool wear [min]']
+    
+    temp_diff = proc_temp - air_temp
+    power_kw = (torque * (speed * 2 * np.pi / 60.0)) / 1000.0
+    overstrain = wear * torque
+
+    # 1. Thermal Dissipation Stress (%)
+    # Safe delta is >= 10K with speed > 1400. Critical if delta < 8.6K and speed < 1380.
+    if temp_diff < 8.6 and speed < 1380:
+        thermal_gauge = min(100.0, 75.0 + (8.6 - temp_diff) * 15.0)
+    elif temp_diff < 9.5:
+        thermal_gauge = 40.0 + (9.5 - temp_diff) * 30.0
+    else:
+        thermal_gauge = max(5.0, 30.0 - (temp_diff - 9.5) * 5.0)
+
+    # 2. Power Envelope Stress (%)
+    # Normal is 3.5 to 9.0 kW.
+    if power_kw > 9.0:
+        power_gauge = min(100.0, 75.0 + (power_kw - 9.0) * 15.0)
+    elif power_kw < 3.5:
+        power_gauge = min(100.0, 65.0 + (3.5 - power_kw) * 15.0)
+    else:
+        power_gauge = max(8.0, abs(power_kw - 6.0) / 3.0 * 35.0)
+
+    # 3. Tool Overstrain Stress (%)
+    # Overstrain limit is ~11000 min*Nm for L
+    overstrain_gauge = min(100.0, (overstrain / 12000.0) * 100.0)
+
+    # 4. Tool Wear Life Expended (%)
+    wear_gauge = min(100.0, (wear / 240.0) * 100.0)
+
+    return {
+        'thermal_stress': round(float(thermal_gauge), 1),
+        'power_stress': round(float(power_gauge), 1),
+        'overstrain_stress': round(float(overstrain_gauge), 1),
+        'tool_wear_expended': round(float(wear_gauge), 1),
+        'temp_diff_k': round(float(temp_diff), 2),
+        'power_kw': round(float(power_kw), 2),
+        'overstrain_val': round(float(overstrain), 1)
     }
 
 
@@ -148,20 +196,14 @@ def predict_failure(raw_params: dict) -> dict:
         raw_params: Dictionary of sensor variables.
         
     Returns:
-        dict: Complete prediction result with probabilities, status, and metadata.
+        dict: Complete prediction result with probabilities, status, gauges, and metadata.
     """
     pipeline, metrics, feature_importances = get_model()
     
-    # 1. Validate inputs
     sanitized = validate_input(raw_params)
-    
-    # 2. Convert to DataFrame
     df_single = pd.DataFrame([sanitized])
-    
-    # 3. Feature engineering
     X_input, _ = prepare_features_and_target(df_single)
     
-    # 4. Predict
     pred = int(pipeline.predict(X_input)[0])
     proba = float(pipeline.predict_proba(X_input)[0][1])
     
@@ -177,6 +219,7 @@ def predict_failure(raw_params: dict) -> dict:
         risk_level = "Critical"
         
     risk_factors = analyze_risk_factors(sanitized, proba)
+    subsystem_gauges = compute_subsystem_gauges(sanitized)
     
     return {
         'prediction': pred,
@@ -186,14 +229,15 @@ def predict_failure(raw_params: dict) -> dict:
         'risk_level': risk_level,
         'input_data': sanitized,
         'risk_factors': risk_factors,
+        'subsystem_gauges': subsystem_gauges,
         'model_name': metrics['best_model'],
         'model_metrics': metrics['models_comparison'][metrics['best_model']]['test_metrics'],
-        'top_features': feature_importances[:6]
+        'comparison_models': metrics['models_comparison'],
+        'top_features': feature_importances[:7]
     }
 
 
 if __name__ == '__main__':
-    # Test normal case
     sample_normal = {
         'type': 'L',
         'air_temperature': 298.1,
@@ -206,20 +250,4 @@ if __name__ == '__main__':
     print("Normal Sample Test:")
     print(f"  Status: {res_norm['status']}")
     print(f"  Failure Probability: {res_norm['failure_probability']}%")
-    print(f"  Risk Level: {res_norm['risk_level']}")
-    
-    # Test failure case (high torque + high tool wear)
-    sample_fail = {
-        'type': 'L',
-        'air_temperature': 302.5,
-        'process_temperature': 310.5,
-        'rotational_speed': 1300,
-        'torque': 75.0,
-        'tool_wear': 230
-    }
-    res_fail = predict_failure(sample_fail)
-    print("\nFailure Sample Test (High wear + Torque):")
-    print(f"  Status: {res_fail['status']}")
-    print(f"  Failure Probability: {res_fail['failure_probability']}%")
-    print(f"  Risk Level: {res_fail['risk_level']}")
-    print(f"  Explanations: {res_fail['risk_factors']}")
+    print(f"  Gauges: {res_norm['subsystem_gauges']}")

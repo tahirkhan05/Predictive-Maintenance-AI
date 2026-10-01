@@ -3,7 +3,6 @@
 **Project Title:** Predictive Maintenance AI  
 **Assignment:** IBM BOB Internship Project  
 **Repository:** [https://github.com/tahirkhan05/Predictive-Maintenance-AI.git](https://github.com/tahirkhan05/Predictive-Maintenance-AI.git)  
-**Author:** IBM BOB Intern  
 
 ---
 

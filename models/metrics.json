@@ -1,0 +1,69 @@
+{
+    "best_model": "Random Forest Classifier",
+    "models_comparison": {
+        "Logistic Regression": {
+            "test_metrics": {
+                "accuracy": 0.861,
+                "precision": 0.1818,
+                "recall": 0.8824,
+                "f1_score": 0.3015,
+                "roc_auc": 0.9385
+            },
+            "cv_train_metrics": {
+                "accuracy_mean": 0.8464,
+                "precision_mean": 0.161,
+                "recall_mean": 0.8378,
+                "f1_mean": 0.2699,
+                "roc_auc_mean": 0.9232
+            },
+            "confusion_matrix": [
+                [
+                    1662,
+                    270
+                ],
+                [
+                    8,
+                    60
+                ]
+            ]
+        },
+        "Random Forest Classifier": {
+            "test_metrics": {
+                "accuracy": 0.9805,
+                "precision": 0.6559,
+                "recall": 0.8971,
+                "f1_score": 0.7578,
+                "roc_auc": 0.9869
+            },
+            "cv_train_metrics": {
+                "accuracy_mean": 0.9826,
+                "precision_mean": 0.7104,
+                "recall_mean": 0.8339,
+                "f1_mean": 0.7659,
+                "roc_auc_mean": 0.9815
+            },
+            "confusion_matrix": [
+                [
+                    1900,
+                    32
+                ],
+                [
+                    7,
+                    61
+                ]
+            ]
+        }
+    },
+    "dataset_summary": {
+        "total_rows": 10000,
+        "total_columns": 14,
+        "total_missing_values": 0,
+        "has_missing_values": false,
+        "class_distribution": {
+            "0": 9661,
+            "1": 339
+        },
+        "failure_rate_percent": 3.39,
+        "is_valid": true
+    }
+}

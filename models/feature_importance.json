@@ -1,0 +1,46 @@
+[
+    {
+        "feature": "Torque_Speed_Ratio",
+        "importance": 0.1741
+    },
+    {
+        "feature": "Rotational speed [rpm]",
+        "importance": 0.1668
+    },
+    {
+        "feature": "Power_kW",
+        "importance": 0.144
+    },
+    {
+        "feature": "Tool wear [min]",
+        "importance": 0.1332
+    },
+    {
+        "feature": "Torque [Nm]",
+        "importance": 0.1268
+    },
+    {
+        "feature": "Overstrain_Index",
+        "importance": 0.1109
+    },
+    {
+        "feature": "Temp_Difference",
+        "importance": 0.0761
+    },
+    {
+        "feature": "Air temperature [K]",
+        "importance": 0.0385
+    },
+    {
+        "feature": "Process temperature [K]",
+        "importance": 0.022
+    },
+    {
+        "feature": "Type_L",
+        "importance": 0.0044
+    },
+    {
+        "feature": "Type_M",
+        "importance": 0.0031
+    }
+]
